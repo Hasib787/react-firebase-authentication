@@ -6,6 +6,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendEmailVerification,
+  sendPasswordResetEmail,
+  updateProfile,
 } from "firebase/auth";
 
 initializeAuthentication();
@@ -14,6 +16,8 @@ function App() {
   const auth = getAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [isSingIn, setIsSingIn] = useState(false);
   const [error, setError] = useState("");
 
@@ -23,6 +27,14 @@ function App() {
 
   const handleChangePassword = (e) => {
     setPassword(e.target.value);
+  };
+
+  const handleChangeName = (e) => {
+    setDisplayName(e.target.value);
+  };
+
+  const handleChangePhone = (e) => {
+    setPhoneNumber(e.target.value);
   };
 
   const handleIsLoggedIn = (e) => {
@@ -46,7 +58,21 @@ function App() {
       handleSignUp();
       setError("");
     }
-    console.log(email, password);
+    console.log(email, password, displayName, phoneNumber);
+  };
+
+  const setNameAndPhone = () => {
+    updateProfile(auth.currentUser, {
+      displayName,
+      phoneNumber,
+      photoURL: "https://static.wikia.nocookie.net/jamesbond/images/d/dc/James_Bond_%28Pierce_Brosnan%29_-_Profile.jpg/revision/latest?cb=20220207082851"
+    })
+      .then((result) => {
+        console.log("success",result)
+      })
+      .catch((error) => {
+        setError(error.message);
+      });
   };
 
   const handleSingIn = () => {
@@ -65,6 +91,7 @@ function App() {
       .then((result) => {
         const user = result.user;
         console.log(user);
+        setNameAndPhone();
         verifyEmail();
       })
       .catch((error) => {
@@ -76,6 +103,14 @@ function App() {
     sendEmailVerification(auth.currentUser).then((result) => {});
   };
 
+  const handleResetPassword = () => {
+    sendPasswordResetEmail(auth, email)
+      .then((result) => {})
+      .catch((error) => {
+        setError(error.message);
+      });
+  };
+
   return (
     <div className="m-5">
       <div>
@@ -83,6 +118,36 @@ function App() {
           <h3 className="text-primary">
             {isSingIn ? "Sign In" : "Registration"}
           </h3>
+          {!isSingIn && (
+            <>
+              <div className="mb-3">
+                <label htmlFor="exampleInputName" className="form-label">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  onBlur={handleChangeName}
+                  className="form-control"
+                  id="exampleInputName"
+                  aria-describedby="emailHelp"
+                  required
+                />
+              </div>
+              <div className="mb-3">
+                <label htmlFor="exampleInputNumber" className="form-label">
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  onBlur={handleChangePhone}
+                  className="form-control"
+                  id="exampleInputNumber"
+                  aria-describedby="emailHelp"
+                  required
+                />
+              </div>
+            </>
+          )}
           <div className="mb-3">
             <label htmlFor="exampleInputEmail1" className="form-label">
               Email address
@@ -122,8 +187,15 @@ function App() {
           <div className="text-danger">
             <p>{error}</p>
           </div>
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="btn btn-primary me-2">
             {isSingIn ? "Login" : "Register"}
+          </button>
+          <button
+            type="button"
+            onClick={handleResetPassword}
+            className="btn btn-secondary btn-sm"
+          >
+            Reset Password
           </button>
         </form>
       </div>
